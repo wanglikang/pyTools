@@ -1,0 +1,3 @@
+若要打印日志，不能使用print进行打印，否则结果展示会解析失败
+若想要打印日志，可以使用debugger的组件
+参考：https://www.alfredapp.com/help/workflows/advanced/debugger/
