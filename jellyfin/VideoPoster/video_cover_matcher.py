@@ -124,13 +124,13 @@ class VideoCoverMatcher:
             print(f"{prefix}{candidate.source_type}: {candidate.cover.full_path}")
         
         # 处理nfo文件
-        # if best_match:
-            # self.update_nfo_file(video, best_match.cover.full_path)
+        if best_match:
+            self.update_nfo_file(video, best_match.cover.full_path)
     
     def update_nfo_file(self, video, cover_path):
         """更新或创建nfo文件"""
         nfo_path = os.path.splitext(video.full_path)[0] + '.nfo'
-        
+        #  路径是 movie/art/poster
         try:
             if os.path.exists(nfo_path):
                 # 修改现有nfo文件
@@ -138,10 +138,13 @@ class VideoCoverMatcher:
                 root = tree.getroot()
                 
                 # 查找或创建thumb元素
-                thumb = root.find('thumb')
-                if thumb is None:
-                    thumb = ET.SubElement(root, 'thumb')
-                thumb.text = cover_path
+                art = root.find('art')
+                if art is None:
+                    art = ET.SubElement(root, 'art')
+                poster = art.find('poster')
+                if poster is None:
+                    poster = ET.SubElement(art, 'poster')
+                poster.text = cover_path
                 
                 # 格式化XML输出
                 ET.indent(tree, space="  ", level=0)
@@ -150,8 +153,8 @@ class VideoCoverMatcher:
             else:
                 # 创建新的nfo文件
                 root = ET.Element('movie')
-                ET.SubElement(root, 'title').text = os.path.splitext(video.filename)[0]
-                ET.SubElement(root, 'thumb').text = cover_path
+                # ET.SubElement(root, 'title').text = os.path.splitext(video.filename)[0]
+                ET.SubElement(root, 'art/poster').text = cover_path
                 
                 tree = ET.ElementTree(root)
                 # 格式化XML输出

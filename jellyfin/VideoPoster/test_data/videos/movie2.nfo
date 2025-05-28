@@ -2,4 +2,7 @@
 <movie>
   <title>movie2</title>
   <thumb>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_data/covers/movie1.jpg</thumb>
+  <art>
+    <poster>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_data/covers/movie1.jpg</poster>
+  </art>
 </movie>

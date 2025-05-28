@@ -2,4 +2,7 @@
 <movie>
   <title>perfect_match</title>
   <thumb>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_files2/covers/perfect_match.jpg</thumb>
+  <art>
+    <poster>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_files2/covers/perfect_match.jpg</poster>
+  </art>
 </movie>

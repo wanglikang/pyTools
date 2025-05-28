@@ -2,4 +2,7 @@
 <movie>
   <title>prefix_suffix_video</title>
   <thumb>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_files2/covers/prefix_suffix_cover.jpg</thumb>
+  <art>
+    <poster>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_files2/covers/prefix_suffix_cover.jpg</poster>
+  </art>
 </movie>
