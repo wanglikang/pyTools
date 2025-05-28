@@ -15,6 +15,9 @@ class MediaFile:
 class CoverCandidate:
     cover: MediaFile
     source_type: str  # 'same_dir', 'parent_dir', 'sibling_dir', 'cover_dir'
+    directory: str    # 封面所在目录
+    video_directory: str  # 视频所在目录
+    similarity_score: float = 0.0  # 相似度分数
 
 class VideoCoverMatcher:
     def __init__(self, root_dir=None):
@@ -22,23 +25,38 @@ class VideoCoverMatcher:
         self.video_extensions = ('.mp4', '.mkv', '.avi', '.mov')
         self.cover_extensions = ('.jpg', '.jpeg', '.png')
         self.cover_keywords = ('封面', '海报', 'cover', 'poster')
+        self.directory_map = {}  # 目录路径 -> {'videos': [], 'covers': []}
 
     def scan_files(self):
-        """扫描视频文件和封面文件"""
+        """扫描视频文件和封面文件，并建立目录映射"""
         self.videos = []
         self.covers = []
+        self.directory_map = {}
         
         for root, _, files in os.walk(self.root_dir):
+            dir_videos = []
+            dir_covers = []
+            
             for file in files:
                 file_path = os.path.join(root, file)
                 if file.lower().endswith(self.video_extensions):
-                    self.videos.append(MediaFile(file, file_path))
+                    media_file = MediaFile(file, file_path)
+                    self.videos.append(media_file)
+                    dir_videos.append(media_file)
                 elif file.lower().endswith(self.cover_extensions):
                     creation_timestamp = time.mktime(time.gmtime(os.path.getctime(file_path)))
                     if creation_timestamp < 2047961571:
-                        self.covers.append(MediaFile(file, file_path))
+                        media_file = MediaFile(file, file_path)
+                        self.covers.append(media_file)
+                        dir_covers.append(media_file)
                     else:
                         print('文件的创建时间过晚，应该是属于jellyfin自动生成的，忽略:{}'.format(file))
+            
+            if dir_videos or dir_covers:
+                self.directory_map[root] = {
+                    'videos': dir_videos,
+                    'covers': dir_covers
+                }
     
     def get_cover_candidates(self, video):
         """获取视频文件的所有候选封面"""
@@ -47,33 +65,52 @@ class VideoCoverMatcher:
         video_name = os.path.splitext(video.filename)[0]
         
         # 1. 同目录封面
-        for cover in self.covers:
-            if os.path.dirname(cover.full_path) == video_dir:
-                candidates.append(CoverCandidate(cover, 'same_dir'))
+        if video_dir in self.directory_map:
+            for cover in self.directory_map[video_dir]['covers']:
+                candidates.append(CoverCandidate(
+                    cover=cover,
+                    source_type='same_dir',
+                    directory=video_dir,
+                    video_directory=video_dir
+                ))
         
         # 2. 上级目录封面
         parent_dir = os.path.dirname(video_dir)
-        if parent_dir != video_dir:  # 不是根目录
-            for cover in self.covers:
-                if os.path.dirname(cover.full_path) == parent_dir:
-                    candidates.append(CoverCandidate(cover, 'parent_dir'))
+        if parent_dir != video_dir and parent_dir in self.directory_map:  # 不是根目录
+            for cover in self.directory_map[parent_dir]['covers']:
+                candidates.append(CoverCandidate(
+                    cover=cover,
+                    source_type='parent_dir',
+                    directory=parent_dir,
+                    video_directory=video_dir
+                ))
         
         # 3. 上级目录中的封面文件夹
         if parent_dir != self.root_dir:
             for dir_name in os.listdir(parent_dir):
                 dir_path = os.path.join(parent_dir, dir_name)
                 if os.path.isdir(dir_path) and any(kw in dir_name for kw in self.cover_keywords):
-                    for cover in self.covers:
-                        if os.path.dirname(cover.full_path) == dir_path:
-                            candidates.append(CoverCandidate(cover, 'cover_dir'))
+                    if dir_path in self.directory_map:
+                        for cover in self.directory_map[dir_path]['covers']:
+                            candidates.append(CoverCandidate(
+                                cover=cover,
+                                source_type='cover_dir',
+                                directory=dir_path,
+                                video_directory=video_dir
+                            ))
         
         # 4. 同级目录
         for dir_name in os.listdir(video_dir):
             dir_path = os.path.join(video_dir, dir_name)
             if os.path.isdir(dir_path) and dir_name != os.path.basename(video_dir):
-                for cover in self.covers:
-                    if os.path.dirname(cover.full_path) == dir_path:
-                        candidates.append(CoverCandidate(cover, 'sibling_dir'))
+                if dir_path in self.directory_map:
+                    for cover in self.directory_map[dir_path]['covers']:
+                        candidates.append(CoverCandidate(
+                            cover=cover,
+                            source_type='sibling_dir',
+                            directory=dir_path,
+                            video_directory=video_dir
+                        ))
         
         return candidates
     
@@ -153,8 +190,9 @@ class VideoCoverMatcher:
             else:
                 # 创建新的nfo文件
                 root = ET.Element('movie')
-                # ET.SubElement(root, 'title').text = os.path.splitext(video.filename)[0]
-                ET.SubElement(root, 'art/poster').text = cover_path
+                art = ET.SubElement(root, 'art')
+                poster = ET.SubElement(art, 'poster')
+                poster.text = cover_path
                 
                 tree = ET.ElementTree(root)
                 # 格式化XML输出
