@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -32,7 +34,11 @@ class VideoCoverMatcher:
                 if file.lower().endswith(self.video_extensions):
                     self.videos.append(MediaFile(file, file_path))
                 elif file.lower().endswith(self.cover_extensions):
-                    self.covers.append(MediaFile(file, file_path))
+                    creation_timestamp = time.mktime(time.gmtime(os.path.getctime(file_path)))
+                    if creation_timestamp < 1747961571:
+                        self.covers.append(MediaFile(file, file_path))
+                    else:
+                        print('文件的创建时间过晚，应该是属于jellyfin自动生成的，忽略:{}'.format(file))
     
     def get_cover_candidates(self, video):
         """获取视频文件的所有候选封面"""
@@ -99,7 +105,7 @@ class VideoCoverMatcher:
             if ratio > best_score:
                 best_score = ratio
                 best_match = candidate
-            elif ratio == best_score:
+            elif ratio == best_score and best_score > 0:
                 # 相同分数时按来源优先级排序
                 source_priority = {'same_dir': 1, 'sibling_dir': 2, 'cover_dir': 3, 'parent_dir': 4}
                 if source_priority[candidate.source_type] < source_priority[best_match.source_type]:
@@ -118,8 +124,8 @@ class VideoCoverMatcher:
             print(f"{prefix}{candidate.source_type}: {candidate.cover.full_path}")
         
         # 处理nfo文件
-        if best_match:
-            self.update_nfo_file(video, best_match.cover.full_path)
+        # if best_match:
+            # self.update_nfo_file(video, best_match.cover.full_path)
     
     def update_nfo_file(self, video, cover_path):
         """更新或创建nfo文件"""
