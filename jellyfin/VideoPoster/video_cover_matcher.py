@@ -21,10 +21,13 @@ class CoverCandidate:
 
 class VideoCoverMatcher:
     def __init__(self, root_dir=None):
-        self.root_dir = root_dir or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        print('当前文件的绝对路径为：{}'.format(os.path.abspath(__file__)))
+        print('当前文件的绝对路径为：{}'.format(os.path.dirname(os.path.abspath(__file__))))
+        self.root_dir = root_dir or os.path.dirname(os.path.abspath(__file__))
+        print('待处理的目录为：{}'.format(self.root_dir))
         self.video_extensions = ('.mp4', '.mkv', '.avi', '.mov')
         self.cover_extensions = ('.jpg', '.jpeg', '.png')
-        self.cover_keywords = ('封面', '海报', 'cover', 'poster')
+        self.cover_keywords = ('封面', '海报','图片', 'cover', 'poster')
         self.directory_map = {}  # 目录路径 -> {'videos': [], 'covers': []}
 
     def scan_files(self):
@@ -34,20 +37,30 @@ class VideoCoverMatcher:
         self.video_cover_maps = {}  # 视频文件路径 -> 四种封面映射
         
         # 首先收集所有视频和封面文件
-        for root, _, files in os.walk(self.root_dir):
+        for root, ddir, files in os.walk(self.root_dir):
+            # print('walk.{}'.format(root))
+            if not '合集' in root :
+                print('忽略 {}'.format(root))
+                continue
+
+            print('开始处理目录:{}'.format(root))
             for file in files:
                 file_path = os.path.join(root, file)
                 if file.lower().endswith(self.video_extensions):
                     self.videos.append(MediaFile(file, file_path))
                 elif file.lower().endswith(self.cover_extensions):
                     creation_timestamp = time.mktime(time.gmtime(os.path.getctime(file_path)))
-                    if creation_timestamp < 2047961571:
+                    if creation_timestamp < 1748362568:
                         self.covers.append(MediaFile(file, file_path))
                     else:
                         print('文件的创建时间过晚，应该是属于jellyfin自动生成的，忽略:{}'.format(file))
-        
+
+        print('扫描到 {} 个视频文件，{}个封面文件'.format(len(self.videos),len(self.covers)))
         # 为每个视频文件建立四种封面映射
+        count = 0
         for video in self.videos:
+            print('处理到了 {} / {},{}'.format(count,len(self.videos),video.full_path))
+            count = count+1
             video_dir = os.path.dirname(video.full_path)
             video_name = os.path.splitext(video.filename)[0]
             parent_dir = os.path.dirname(video_dir)
@@ -58,6 +71,7 @@ class VideoCoverMatcher:
                 if os.path.dirname(cover.full_path) == video_dir
             ]
             
+            print('同级目录处理完毕')
             # 2. 子目录封面（一级子目录）
             sub_dir_covers = []
             if os.path.exists(video_dir):
@@ -69,6 +83,7 @@ class VideoCoverMatcher:
                             if os.path.dirname(cover.full_path) == dir_path
                         ])
             
+            print('子目录处理完毕')
             # 3. 父目录封面
             parent_dir_covers = []
             if parent_dir != video_dir and os.path.exists(parent_dir):
@@ -77,6 +92,7 @@ class VideoCoverMatcher:
                     if os.path.dirname(cover.full_path) == parent_dir
                 ]
             
+            print('父级目录处理完毕')
             # 4. 父目录特定子目录封面
             parent_sub_dir_covers = []
             if parent_dir != self.root_dir and os.path.exists(parent_dir):
@@ -87,7 +103,7 @@ class VideoCoverMatcher:
                             cover for cover in self.covers 
                             if os.path.dirname(cover.full_path) == dir_path
                         ])
-            
+            print('兄弟目录处理完毕')
             # 建立映射关系
             self.video_cover_maps[video.full_path] = {
                 'same_dir': same_dir_covers,
@@ -175,7 +191,7 @@ class VideoCoverMatcher:
                 best_match = candidate
             elif ratio == best_score and best_score > 0:
                 # 相同分数时按来源优先级排序
-                source_priority = {'same_dir': 1, 'sibling_dir': 2, 'cover_dir': 3, 'parent_dir': 4}
+                source_priority = {'same_dir': 1, 'sub_dir': 2, 'parent_dir': 3, 'parent_sub_dir': 4}
                 if source_priority[candidate.source_type] < source_priority[best_match.source_type]:
                     best_match = candidate
         
