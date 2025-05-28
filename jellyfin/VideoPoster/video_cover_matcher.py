@@ -35,7 +35,7 @@ class VideoCoverMatcher:
                     self.videos.append(MediaFile(file, file_path))
                 elif file.lower().endswith(self.cover_extensions):
                     creation_timestamp = time.mktime(time.gmtime(os.path.getctime(file_path)))
-                    if creation_timestamp < 1747961571:
+                    if creation_timestamp < 2047961571:
                         self.covers.append(MediaFile(file, file_path))
                     else:
                         print('文件的创建时间过晚，应该是属于jellyfin自动生成的，忽略:{}'.format(file))
@@ -59,7 +59,7 @@ class VideoCoverMatcher:
                     candidates.append(CoverCandidate(cover, 'parent_dir'))
         
         # 3. 上级目录中的封面文件夹
-        if parent_dir != video_dir:
+        if parent_dir != self.root_dir:
             for dir_name in os.listdir(parent_dir):
                 dir_path = os.path.join(parent_dir, dir_name)
                 if os.path.isdir(dir_path) and any(kw in dir_name for kw in self.cover_keywords):
