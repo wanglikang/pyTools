@@ -1,7 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <movie>
-  <title>video with spaces</title>
-  <thumb>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_files2/covers/cover with spaces.jpg</thumb>
   <art>
     <poster>/Users/bytedance/GithubProjects/pyTools/jellyfin/VideoPoster/test_files2/covers/cover with spaces.jpg</poster>
   </art>

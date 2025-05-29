@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import shutil
 
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -207,9 +208,9 @@ class VideoCoverMatcher:
             prefix = "  * " if best_match and candidate.cover.filename == best_match.cover.filename else "    "
             print(f"{prefix}{candidate.source_type}: {candidate.cover.full_path}")
         
-        # 处理nfo文件
+        # 复制封面文件到视频目录
         if best_match:
-            self.update_nfo_file(video, best_match.cover.full_path)
+             self.copy_cover_to_video_dir(video, best_match.cover.full_path)
     
     def update_nfo_file(self, video, cover_path):
         """更新或创建nfo文件"""
@@ -247,7 +248,26 @@ class VideoCoverMatcher:
                 tree.write(nfo_path, encoding='UTF-8', xml_declaration=True)
                 print(f"已创建nfo文件: {nfo_path}")
         except Exception as e:
-            print(f"处理nfo文件时出错: {nfo_path}, 错误: {str(e)}")
+            print(f"修改nfo文件时出错: {str(e)}")
+            return False        
+
+    def copy_cover_to_video_dir(self, video, cover_path):
+        """将封面文件复制到视频文件同目录下，并添加'-poster'后缀"""
+        try:
+            # 获取封面文件扩展名
+            ext = os.path.splitext(cover_path)[1]
+            # 构建新文件名
+            new_name = os.path.splitext(video.filename)[0] + '-poster' + ext
+            # 目标路径
+            dest_path = os.path.join(os.path.dirname(video.full_path), new_name)
+            
+            # 复制文件
+            shutil.copy2(cover_path, dest_path)
+            print(f"已复制封面文件到: {dest_path}")
+            return True
+        except Exception as e:
+            print(f"复制封面文件时出错: {str(e)}")
+            return False
     
     def run(self):
         """运行匹配流程"""
