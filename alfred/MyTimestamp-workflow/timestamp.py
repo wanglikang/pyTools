@@ -48,11 +48,33 @@ def process_single_input(input_str):
         delta = 0
         if input_str == 'now':
             ts = time.time()
+        elif re.match(r'\d{4}.*', input_str):
+            if re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,9}', input_str):
+                timeFormat = "%Y-%m-%d %H:%M:%S.%f"
+            elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,6}', input_str):
+                timeFormat = "%Y-%m-%d %H:%M:%S.%f"
+            elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,3}', input_str):
+                timeFormat = "%Y-%m-%d %H:%M:%S.%f"
+            elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}:\d{1,2}', input_str):
+                timeFormat = "%Y-%m-%d %H:%M:%S"
+            elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}', input_str):
+                timeFormat = "%Y-%m-%d %H:%M"
+            elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}', input_str):
+                timeFormat = "%Y-%m-%d %H"
+            elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}', input_str):
+                timeFormat = "%Y-%m-%d"
+            elif  re.match(r'\d{4}(-|/|\\)\d{1,2}', input_str):
+                timeFormat = "%Y-%m"
+            else:
+                timeFormat = "%Y-%m-%d %H:%M:%S"
+
+            input_str = re.sub(r'[^\w-]', '-', input_str)
+            ts = int(time.mktime(time.strptime(input_str, timeFormat)))
         elif re.match(r'\d+', input_str):
             ts = int(input_str)
             if ts > 253402271999:
                 ts = ts / 1000
-        else:
+        elif re.match(r'now.+', input_str):
             # 处理时间运算
             base_time = time.time() if 'now' in input_str else None
           
@@ -76,7 +98,8 @@ def process_single_input(input_str):
                 ts = base_time + delta
             else:
                 raise ValueError('不支持的输入格式:'+input_str)
-            
+        else:
+            return []    
         return [ts,delta]
     except Exception as e:
         print(f'处理输入时出错: {e}')
