@@ -48,7 +48,7 @@ def process_single_input(input_str):
         delta = 0
         if input_str == 'now':
             ts = time.time()
-        elif re.match(r'\d{4}.*', input_str):
+        elif re.match(r'\d{4}(-|/|\\).*', input_str):
             if re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,9}', input_str):
                 timeFormat = "%Y-%m-%d %H:%M:%S.%f"
             elif re.match(r'\d{4}(-|/|\\)\d{1,2}(-|/|\\)\d{1,2}\W\d{1,2}:\d{1,2}:\d{1,2}\.\d{1,6}', input_str):
