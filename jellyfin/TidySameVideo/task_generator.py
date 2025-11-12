@@ -4,7 +4,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from utils import generate_folder_name, check_path_length, sanitize_folder_name
 from data_processor import find_similar_file_groups
 
-def detect_conflicts(task: Dict[str, Any], existing_tasks: List[Dict[str, Any]]) -> Optional[Dict[str, str]]:
+def detect_conflicts(task: Dict[str, Any], existing_tasks: List[Dict[str, Any]], context = None) -> Optional[Dict[str, str]]:
     """检测任务冲突"""
     target_path = task['target']
     
@@ -47,7 +47,8 @@ def detect_conflicts(task: Dict[str, Any], existing_tasks: List[Dict[str, Any]])
 
 def generate_move_tasks(similar_groups: List[List[Dict[str, Any]]], 
                        output_dir: str, 
-                       strategy: str = "keep_best") -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+                       strategy: str = "keep_best",
+                       context = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
     """生成移动任务和冲突列表"""
     if not similar_groups:
         logging.info("没有找到相似文件组，不需要生成移动任务")
@@ -94,7 +95,7 @@ def generate_move_tasks(similar_groups: List[List[Dict[str, Any]]],
                 }
                 
                 # 检测冲突
-                conflict = detect_conflicts(task, tasks)
+                conflict = detect_conflicts(task, tasks, context)
                 if conflict:
                     conflicts.append(conflict)
                 else:
@@ -115,7 +116,7 @@ def generate_move_tasks(similar_groups: List[List[Dict[str, Any]]],
                 }
                 
                 # 检测冲突
-                conflict = detect_conflicts(task, tasks)
+                conflict = detect_conflicts(task, tasks, context)
                 if conflict:
                     conflicts.append(conflict)
                 else:
@@ -124,7 +125,7 @@ def generate_move_tasks(similar_groups: List[List[Dict[str, Any]]],
     logging.info(f"生成了{len(tasks)}个移动任务，发现{len(conflicts)}个冲突")
     return tasks, conflicts
 
-def validate_move_tasks(tasks: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+def validate_move_tasks(tasks: List[Dict[str, Any]], context = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
     """验证移动任务的有效性"""
     valid_tasks = []
     invalid_tasks = []
@@ -180,7 +181,8 @@ def validate_move_tasks(tasks: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any
 
 def generate_execution_summary(tasks: List[Dict[str, Any]], 
                                conflicts: List[Dict[str, str]],
-                               invalid_tasks: List[Dict[str, str]]) -> Dict[str, Any]:
+                               invalid_tasks: List[Dict[str, str]],
+                               context = None) -> Dict[str, Any]:
     """生成执行计划摘要"""
     summary = {
         'total_tasks': len(tasks),

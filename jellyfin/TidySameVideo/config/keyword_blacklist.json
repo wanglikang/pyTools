@@ -1,0 +1,18 @@
+{
+    "description": "此文件包含不参与倒排索引计算的关键字黑名单。这些关键字通常是常见的、无区分度的词或标记。",
+    "last_updated": "请手动更新此日期",
+    "keywords": [
+        "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "ts", "m2ts", "iso", "m3u8",
+        "720p", "1080p", "2160p", "4k", "8k", "uhd", "hd", "sd", "bluray", "bdrip", "dvdrip", "webrip", "web-dl", "hdtv", "webdl",
+        "h264", "h265", "hevc", "x264", "x265", "avc", "mpeg4", "divx", "xvid", "vp9", "av1",
+        "aac", "ac3", "dts", "flac", "mp3", "ogg", "opus", "wav",
+        "repack", "proper", "internal", "limited", "directors", "cut", "extended", "uncut", "remastered", "unrated", "imax",
+        "dual", "audio", "chinese", "english", "japanese", "korean", "mandarin", "cantonese", "dubbed", "subbed", "multi", "sub", "dub",
+        "season", "series", "episode", "ep", "part", "volume", "vol", "special", "movie", "film", "anime", "cartoon", "documentary",
+        "the", "and", "or", "a", "an", "of", "to", "in", "on", "at", "for", "with", "by", "from", "about", "as", "is", "are", "was", "were",
+        "", "-", "_", "-", "[", "]", "(", ")", "{", "}", "<", ">", "#", "@", "$", "%", "^", "&", "*", "+", "=", "|", "\\", "/", "?", "~", "`", "\"", "'",
+        "official", "official", "trailer", "teaser", "preview", "featurette", "behind", "scenes", "making", "of", "commentary", "bonus", "material",
+        "your_custom_keyword_here"
+    ],
+    "custom_notes": "请根据您的具体需求调整此黑名单。添加过多关键字可能导致无法正确匹配相似文件，添加过少则可能导致误匹配。"
+}

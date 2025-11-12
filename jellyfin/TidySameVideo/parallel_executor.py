@@ -21,8 +21,12 @@ except ImportError:
     def tqdm(iterable, **kwargs):
         return iterable
 
-def calculate_optimal_workers() -> int:
-    """计算最佳工作线程数"""
+def calculate_optimal_workers(context = None) -> int:
+    """计算最佳工作线程数
+    
+    Args:
+        context: 上下文对象（可选）
+    """
     # 获取CPU核心数
     cpu_count = multiprocessing.cpu_count()
     
@@ -33,10 +37,14 @@ def calculate_optimal_workers() -> int:
     logging.info(f"计算最佳工作线程数: CPU核心数={cpu_count}, 工作线程数={optimal_workers}")
     return optimal_workers
 
-def execute_move_task(task: Dict[str, Any]) -> Tuple[bool, str, Optional[str]]:
+def execute_move_task(task: Dict[str, Any], context = None) -> Tuple[bool, str, Optional[str]]:
     """
     执行单个移动任务
     返回: (成功标志, 源文件路径, 错误信息(如果失败))
+    
+    Args:
+        task: 任务信息字典
+        context: 上下文对象（可选）
     """
     source = task['source']
     target = task['target']
@@ -82,13 +90,14 @@ def execute_move_task(task: Dict[str, Any]) -> Tuple[bool, str, Optional[str]]:
         logging.error(f"执行移动任务失败: {source} -> {target}, 错误: {str(e)}")
         return False, source, str(e)
 
-def parallel_execute_tasks(tasks: List[Dict[str, Any]], max_workers: Optional[int] = None) -> Dict[str, Any]:
+def parallel_execute_tasks(tasks: List[Dict[str, Any]], max_workers: Optional[int] = None, context = None) -> Dict[str, Any]:
     """
     并行执行任务列表
     
     Args:
         tasks: 任务列表，每个任务包含source和target字段
         max_workers: 最大工作线程数，如果为None则自动计算
+        context: 上下文对象（可选）
     
     Returns:
         包含执行结果的字典

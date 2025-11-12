@@ -7,6 +7,7 @@ from typing import List, Optional
 # 导入子模块
 from utils import setup_logging, load_from_json, save_to_json, export_report
 from data_processor import scan_multiple_directories, find_similar_file_groups, create_inverted_index
+from context import VideoOrganizerContext
 from task_generator import generate_move_tasks, validate_move_tasks, generate_execution_summary
 from parallel_executor import parallel_execute_tasks
 
@@ -118,58 +119,70 @@ def handle_scan_mode(args: argparse.Namespace) -> bool:
     """处理扫描模式"""
     print("=== 开始扫描目录 ===")
     
+    # 创建上下文对象
+    context = VideoOrganizerContext(
+        scan_directories=args.scan,
+        output_dir=args.output,
+        strategy=args.strategy,
+        tasks_file=args.tasks_file
+    )
+    
     # 扫描目录
-    file_list = scan_multiple_directories(args.scan)
-    if not file_list:
+    scan_multiple_directories(context)
+    if not context.file_list:
         print("未发现任何文件，程序退出")
         return False
     
-    print(f"扫描完成，发现 {len(file_list)} 个文件")
+    print(f"扫描完成，发现 {len(context.file_list)} 个文件")
     
     # 创建倒排索引
-    inverted_index = create_inverted_index(file_list)
+    create_inverted_index(context)
     
     # 查找相似文件组
-    similar_groups = find_similar_file_groups(file_list, inverted_index)
-    if not similar_groups:
+    find_similar_file_groups(context)
+    if not context.similar_groups:
         print("未发现相似文件组，无需整理")
         return True
     
-    print(f"发现 {len(similar_groups)} 组相似文件")
+    print(f"发现 {len(context.similar_groups)} 组相似文件")
     
-    # 生成移动任务
-    tasks, conflicts = generate_move_tasks(similar_groups, args.output, args.strategy)
+    # 生成移动任务并保存到上下文
+    context.tasks, context.conflicts = generate_move_tasks(
+        context.similar_groups, context.output_dir, context.strategy
+    )
     
-    # 验证任务
-    valid_tasks, invalid_tasks = validate_move_tasks(tasks)
+    # 验证任务并保存到上下文
+    context.valid_tasks, context.invalid_tasks = validate_move_tasks(context.tasks)
     
-    # 生成执行摘要
-    summary = generate_execution_summary(valid_tasks, conflicts, invalid_tasks)
+    # 生成执行摘要并保存到上下文
+    context.summary = generate_execution_summary(
+        context.valid_tasks, context.conflicts, context.invalid_tasks
+    )
     
     # 保存任务到文件
     task_data = {
-        'tasks': valid_tasks,
-        'conflicts': conflicts,
-        'invalid_tasks': invalid_tasks,
-        'summary': summary
+        'tasks': context.valid_tasks,
+        'conflicts': context.conflicts,
+        'invalid_tasks': context.invalid_tasks,
+        'summary': context.summary
     }
     
-    if save_to_json(task_data, args.tasks_file):
-        print(f"任务文件已保存到: {args.tasks_file}")
+    if save_to_json(task_data, context.tasks_file):
+        print(f"任务文件已保存到: {context.tasks_file}")
     else:
-        print(f"保存任务文件失败: {args.tasks_file}")
+        print(f"保存任务文件失败: {context.tasks_file}")
         return False
     
     # 打印执行摘要
     print("\n=== 执行计划摘要 ===")
-    print(f"总计任务数: {summary['total_tasks']}")
-    print(f"冲突数: {summary['conflicts']}")
-    print(f"无效任务数: {summary['invalid_tasks']}")
-    print(f"估计数据量: {summary['estimated_size_mb']:.2f} MB")
+    print(f"总计任务数: {context.summary['total_tasks']}")
+    print(f"冲突数: {context.summary['conflicts']}")
+    print(f"无效任务数: {context.summary['invalid_tasks']}")
+    print(f"估计数据量: {context.summary['estimated_size_mb']:.2f} MB")
     
-    if summary['task_details']:
+    if context.summary['task_details']:
         print("\n任务预览:")
-        for detail in summary['task_details'][:5]:  # 只显示前5个
+        for detail in context.summary['task_details'][:5]:  # 只显示前5个
             if 'note' in detail:
                 print(f"  {detail['note']}")
             else:
@@ -179,10 +192,10 @@ def handle_scan_mode(args: argparse.Namespace) -> bool:
                 print()
     
     # 如果指定了直接执行
-    if args.execute and valid_tasks:
+    if args.execute and context.valid_tasks:
         return handle_execute_mode(args.tasks_file, args.workers)
     
-    if valid_tasks:
+    if context.valid_tasks:
         print(f"\n要执行这些任务，请运行: python -m video_organizer --execute-tasks {args.tasks_file}")
     
     return True
@@ -252,6 +265,14 @@ def main() -> int:
         # 设置日志级别
         log_level = getattr(logging, args.log_level.upper())
         logging.getLogger().setLevel(log_level)
+        
+        # 创建上下文对象
+        context = VideoOrganizerContext(
+            scan_directories=args.scan if hasattr(args, 'scan') else None,
+            output_dir=args.output if hasattr(args, 'output') else None,
+            strategy=args.strategy if hasattr(args, 'strategy') else 'keep_best',
+            tasks_file=args.tasks_file if hasattr(args, 'tasks_file') else None
+        )
         
         # 根据模式处理
         success = False
