@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "url": "https://localhost:8000/JSONFormatter.sublime-package",
+  "description": "A Sublime Text plugin for formatting JSON strings",
+  "dependencies": [],
+  "sublime_text": ">=4000"
+}

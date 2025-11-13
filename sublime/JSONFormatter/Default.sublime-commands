@@ -1,0 +1,17 @@
+[
+    {
+        "caption": "Format: Standard JSON",
+        "command": "json_formatter",
+        "args": {"format_type": "standard"}
+    },
+    {
+        "caption": "Format: Escaped JSON",
+        "command": "json_formatter",
+        "args": {"format_type": "escaped"}
+    },
+    {
+        "caption": "Format: Nested JSON",
+        "command": "json_formatter",
+        "args": {"format_type": "nested"}
+    }
+]

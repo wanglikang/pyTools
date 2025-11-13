@@ -1,0 +1,17 @@
+[
+    {
+        "keys": ["ctrl+alt+j"], 
+        "command": "json_formatter",
+        "args": {"format_type": "standard"}
+    },
+    {
+        "keys": ["ctrl+alt+shift+j"], 
+        "command": "json_formatter",
+        "args": {"format_type": "escaped"}
+    },
+    {
+        "keys": ["ctrl+alt+n"], 
+        "command": "json_formatter",
+        "args": {"format_type": "nested"}
+    }
+]

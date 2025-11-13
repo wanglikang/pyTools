@@ -1,0 +1,16 @@
+{
+  "schema_version": "4.0.0",
+  "packages": [
+    {
+      "name": "JSONFormatter",
+      "details": "https://github.com/username/JSONFormatter",
+      "releases": [
+        {
+          "sublime_text": ">=4000",
+          "tags": true,
+          "url": "https://localhost:8000/JSONFormatter.sublime-package"
+        }
+      ]
+    }
+  ]
+}
