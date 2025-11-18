@@ -20,3 +20,6 @@ A plugin that formats JSON strings with three different modes:
 - Or use Command Palette: `JSON Formatter` options
 
 Formatted JSON will be copied to clipboard automatically.
+
+## 手动打包，包含.python_version
+压缩包里 包含 .python_version 文件，指定python的版本为3.8,否则，sublime text 默认运行的python版本是3.3.7
