@@ -8,7 +8,8 @@
 import os
 import argparse
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Inches, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 def file_to_word(folder_path, file_extensions, output_file):
     """
@@ -21,7 +22,75 @@ def file_to_word(folder_path, file_extensions, output_file):
     """
     # 创建Word文档
     doc = Document()
-    doc.add_heading('文件内容汇总', 0)
+    # 设置标题字号为小五
+    title = doc.add_heading('文件内容汇总', 0)
+    title_run = title.runs[0]
+    title_run.font.size = Pt(9)
+    
+    # 设置页眉
+    section = doc.sections[0]
+    header = section.header
+    header_paragraph = header.paragraphs[0]
+    header_paragraph.text = "QLExpress辅助开发应用软件 V1.0"
+    header_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 设置页码 - "第 x 页 共 xx 页" 格式，居中对齐
+    footer = section.footer
+    # 清空现有页脚内容
+    for paragraph in footer.paragraphs:
+        paragraph.clear()
+    
+    # 创建新的页脚段落
+    footer_paragraph = footer.add_paragraph()
+    footer_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # 构建页码格式
+    # 在python-docx中，我们需要使用更复杂的方式添加字段
+    # 先添加静态文本
+    footer_paragraph.add_run("第 ")
+    
+    # 添加页码字段 (PAGE)
+    # 注意：python-docx中add_field的正确用法
+    from docx.oxml.shared import qn
+    from docx.oxml import OxmlElement
+    
+    # 创建页码字段
+    fldChar1 = OxmlElement('w:fldChar')
+    fldChar1.set(qn('w:fldCharType'), 'begin')
+    
+    instrText = OxmlElement('w:instrText')
+    instrText.text = 'PAGE'
+    
+    fldChar2 = OxmlElement('w:fldChar')
+    fldChar2.set(qn('w:fldCharType'), 'end')
+    
+    # 将字段元素添加到run中
+    r = footer_paragraph.add_run()
+    r._r.append(fldChar1)
+    r._r.append(instrText)
+    r._r.append(fldChar2)
+    
+    # 添加中间文本
+    footer_paragraph.add_run(" 页 共 ")
+    
+    # 添加总页数字段 (NUMPAGES)
+    fldChar3 = OxmlElement('w:fldChar')
+    fldChar3.set(qn('w:fldCharType'), 'begin')
+    
+    instrText2 = OxmlElement('w:instrText')
+    instrText2.text = 'NUMPAGES'
+    
+    fldChar4 = OxmlElement('w:fldChar')
+    fldChar4.set(qn('w:fldCharType'), 'end')
+    
+    # 将字段元素添加到run中
+    r2 = footer_paragraph.add_run()
+    r2._r.append(fldChar3)
+    r2._r.append(instrText2)
+    r2._r.append(fldChar4)
+    
+    # 添加结尾文本
+    footer_paragraph.add_run(" 页")
     
     # 递归遍历文件夹
     file_count = 0
@@ -47,9 +116,16 @@ def file_to_word(folder_path, file_extensions, output_file):
                     line_count += len(non_empty_lines)
                     content = '\n'.join(non_empty_lines)
                     
-                    # 添加文件内容
-                    doc.add_heading('内容:', level=2)
-                    doc.add_paragraph(content)
+                    # 添加文件内容，设置二级标题和正文内容的字号为小五
+                    heading = doc.add_heading(f'文件:{file}', level=2)
+                    # 设置二级标题字号
+                    for run in heading.runs:
+                        run.font.size = Pt(9)
+                    
+                    # 设置正文内容字号
+                    paragraph = doc.add_paragraph()
+                    paragraph_run = paragraph.add_run(content)
+                    paragraph_run.font.size = Pt(9)
                     
                     # 添加分页符
                     doc.add_page_break()
